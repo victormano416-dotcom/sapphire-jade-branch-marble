@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "BANKAI",
+      "hasCanvas": false,
+      "bodyTextLen": 198,
+      "bodyTextHash": "d85aa4c985d06180addfae9b0417671dba86258068430a2b5d1c7b67c584d339",
+      "bodyTextPrefix": "BANKAI Seu caixa, sem planilha. Entradas e gastos do mês, fixos ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "BANKAI",
+      "hasCanvas": false,
+      "bodyTextLen": 198,
+      "bodyTextHash": "d85aa4c985d06180addfae9b0417671dba86258068430a2b5d1c7b67c584d339",
+      "bodyTextPrefix": "BANKAI Seu caixa, sem planilha. Entradas e gastos do mês, fixos ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

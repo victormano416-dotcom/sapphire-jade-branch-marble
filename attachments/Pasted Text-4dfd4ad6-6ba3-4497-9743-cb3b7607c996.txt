@@ -1,0 +1,180 @@
+# PROMPT — App financeiro público (evolução do Meu Caixa / BANKAI)
+
+Você vai criar um app web financeiro completo, PWA-ready, em React + Vite + Tailwind, pensado para uso público (não só uso pessoal). O resultado deve ser visualmente excepcional: minimalista, elegante, com efeitos sutis e profissionais — o tipo de interface que faz a pessoa parar e pensar “isso é premium”.
+
+NÃO faça layout genérico de dashboard bootstrap. Foque em tipografia limpa, muito espaço em branco (ou negativo no dark), hierarquia clara, microinterações e temas trocáveis de verdade.
+
+---
+
+## 1. Identidade e produto
+
+- Nome sugerido: **BANKAI** (editável no perfil).
+- Tagline: controle de caixa pessoal — entradas, gastos, cartões e fatura.
+- Público: qualquer pessoa no Brasil (valores em BRL, datas pt-BR).
+- Uso: web + instalável como PWA (manifest, service worker, tema standalone).
+- Idioma da UI: português do Brasil.
+- Tom visual: minimalista, contemporâneo, “fintech calma” — sem poluição, sem gradientes grátis demais, sem stock icons genéricos.
+
+---
+
+## 2. Sistema de conta e perfil (uso público)
+
+O app NÃO começa direto no caixa. Fluxo:
+
+1. **Onboarding** curto (2–3 telas): o que o app faz + escolher tema inicial.
+2. **Cadastro / Login**
+   - E-mail + senha OU magic link / Google (se possível; senão e-mail+senha local simulado com persistência).
+   - Validação básica, mensagens claras de erro.
+3. **Perfil editável**
+   - Foto (upload da galeria).
+   - Nome de exibição.
+   - Saudação no topo: “Olá, {nome}”.
+   - Preferências: tema, moeda (BRL fixo no MVP), dia de início do mês (opcional).
+4. **Sessão**
+   - Dados financeiros por usuário (chave por userId no storage).
+   - Logout.
+   - Preparar estrutura mental para no futuro: “assinatura ativa até {data}” (não precisa cobrar de verdade no MVP, mas deixe um placeholder de plano Free / Pro na tela de perfil).
+
+---
+
+## 3. Funcionalidades financeiras (manter e aprimorar o que já existia)
+
+### 3.1 Núcleo (obrigatório e 100% funcional)
+- **Entradas**: salário, renda extra, freelance, investimentos, outros; recorrente ou avulsa; mês/ano ou dia do mês.
+- **Gastos**: fixo e variável; categorias; recorrente ou avulso.
+- **Cartões de crédito**
+  - Nome, limite, dia de vencimento.
+  - Compras parceladas e à vista no cartão.
+  - Fatura do mês atual e projeção nos próximos meses.
+  - **Limite conectado a qualquer gasto do cartão**: utilizado = soma das parcelas em aberto (incluindo mês atual); disponível = limite − utilizado; barra de uso (%), alerta visual em 80% e 100%.
+- **Resumo (Início)**
+  - Entradas do mês, gastos fixos, variáveis, fatura de cartão, sobra do mês.
+  - Gráfico suave (curva/área) da fatura nos próximos 6 meses — não barras quadradas pesadas.
+  - Cards de fatura por cartão com estética de cartão físico (glass, borda sutil, tipografia refinada).
+- **Monitoramento**: gasto por categoria no mês (gastos + parcelas de cartão).
+- **Limpeza**: remover lançamentos já encerrados (parcelas quitadas e gastos de meses passados), com confirmação.
+
+### 3.2 Lançamento rápido (FAB)
+- Botão flutuante **arrastável**, formato redondo, tamanho médio (não enorme).
+- Pode usar vídeo/loop sutil no FAB ou ícone minimalista + ripple.
+- Modal glassmorphism alinhado ao tema ativo.
+- Formas: crédito, débito, PIX, dinheiro, entrada.
+- Se crédito: escolher cartão + parcelas.
+- Categoria, descrição, valor em destaque tipográfico grande, mês/ano.
+- OCR de comprovante (imagem da galeria/câmera): extrair valor, parcelas (ex.: “10 x de R$ 394,00” + total R$ 3.940), data, estabelecimento, crédito/débito/PIX, sugerir cartão.
+- **Não** mostrar texto OCR feio na UI final; só o formulário limpo após reconhecer.
+- Suporte a **extrato/fatura com várias linhas** (ex. Nubank): lista com checkboxes, escolher cartão uma vez, “Lançar marcados”; ignorar pagamentos negativos.
+- Share Target / receber comprovante (quando PWA): imagem ou texto; se só texto, preencher sem OCR.
+
+### 3.3 Regras de calendário financeiro
+- Recorrentes contam todo mês; avulsos só no mês lançado.
+- Parcelas: 1ª no mês da compra, demais nos seguintes.
+- Data do comprovante deve posicionar a compra no mês correto (não só “hoje”).
+- Limite do cartão usa saldo em aberto correto (parcela do mês atual ainda conta no utilizado).
+
+---
+
+## 4. Funcionalidades extras (para surpreender e uso público)
+
+Inclua pelo menos estas, todas usáveis de verdade:
+
+1. **Metas** — “guardar R$ X até mês Y”; progresso com barra e %; celebração sutil ao concluir.
+2. **Orçamento por categoria** — limite mensal por categoria; aviso quando passar de 80%/100%.
+3. **Modo privacidade** — ocultar valores (••••) com um toque no olho no header; útil em público.
+4. **Exportar** — CSV do mês ou de tudo (entradas, gastos, compras).
+5. **Backup / restore** — baixar JSON e importar (para o usuário não perder dados).
+6. **Insights do mês** (texto curto gerado por regras, não IA obrigatória): “Sua maior categoria foi X (Y%)”; “Sobra 12% menor que o mês passado” se houver histórico.
+7. **Lembrete de vencimento de cartão** — badge no início quando faltar ≤ 5 dias para o dia de vencimento cadastrado.
+8. **Onboarding de primeiro cartão / primeira entrada** — empty states bonitos, não telas mortas.
+9. **Atalhos no lançamento rápido** — últimos 3 lançamentos como chips para repetir valor/categoria.
+10. **Tela de planos (placeholder)** — Free vs Pro (Pro = temas extras + export + metas ilimitadas), só UI; botão “Em breve” ou simular ativação local para demo.
+
+---
+
+## 5. Visual, temas e efeitos (prioridade máxima)
+
+### 5.1 Temas escolhíveis pelo usuário (todos funcionais de ponta a ponta)
+Cada tema deve trocar: fundo, superfícies, texto, bordas, acento, FAB, gráficos, modais, nav.
+
+Mínimo 5 temas:
+1. **Obsidian** — preto profundo, texto off-white, acento branco/cinza (padrão dark premium).
+2. **Paper** — off-white, texto carvão, acento preto suave (light minimal).
+3. **Aurora** — dark com acento violeta/azul muito discreto, glow suave em cards ativos.
+4. **Forest** — dark esverdeado, acento sage.
+5. **Sand** — bege/areia claro, tipografia serif discreta no título do app apenas.
+
+Persistir tema em storage por usuário.
+
+### 5.2 Linguagem visual
+- Muito minimalista: poucos traços, ícones outline finos (SVG), zero emoji de lápis.
+- Cards com `backdrop-blur`, bordas 1px em baixa opacidade, radius generoso (2xl/3xl).
+- Tipografia: sistema ou Inter/SF-like; números tabulares para dinheiro.
+- Valores em BRL com `pt-BR`.
+- Nav inferior em pílula flutuante (glass), some quando modal aberto.
+- Header com avatar + nome + toggle de privacidade.
+- Transições: 150–250ms ease; não exagerar.
+- Efeitos “maneiro” mas elegantes:
+  - Hover/press scale sutil em botões.
+  - Modal com slide-up no mobile + fade backdrop.
+  - Gráfico de fatura com área fill em gradiente transparente + stroke fino.
+  - Barra de limite do cartão animando width.
+  - Skeleton discreto no primeiro load.
+  - Confetti ou pulse mínimo só ao bater meta (opcional e desligável).
+  - Parallax leve ou vídeo de fundo **opcional** e desligável nas configurações (performance mobile).
+
+### 5.3 O que evitar
+- Visual “template SaaS 2019”.
+- Cores neon gritando.
+- Muitos cards competindo.
+- Textos de placeholder feios, OCR cru na tela, bordas grossas pretas.
+
+---
+
+## 6. Estrutura de telas (abas)
+
+1. **Início** — resumo, sobra, fatura curva, cards por cartão, atalhos, alertas de vencimento.
+2. **Entradas**
+3. **Gastos**
+4. **Cartões** (lista + compras + limite + vencimento)
+5. **Monitor** (categorias + orçamentos)
+6. **Mais / Perfil** — tema, privacidade, metas, export, backup, plano, logout
+
+FAB global de lançamento rápido acima da nav.
+
+---
+
+## 7. Dados e qualidade técnica
+
+- React funcional + hooks.
+- Persistência: `localStorage` por usuário no MVP; funções isoladas para depois trocar por API.
+- Helpers de mês: recorrência, parcelas, fatura do mês, quitados.
+- Parser de comprovante e extrato robusto (pt-BR): total vs parcela, “10 x de R$”, ignorar “Parc 01/1” falso, multilinha.
+- Acessibilidade básica: focus, labels, contraste nos temas claros e escuros.
+- Mobile-first (390–430px), depois desktop centralizado max-w-2xl ou 3xl.
+- Código limpo, componentes reutilizáveis (Modal, Campo, Chip, Card, Icon).
+
+---
+
+## 8. Entrega esperada
+
+1. App rodando com todas as rotas/abas funcionais.
+2. Troca de tema em tempo real em 100% da UI.
+3. Cadastro/login/perfil funcionando (mesmo que local).
+4. Fluxo completo de lançamentos + cartões + limite + OCR/extrato.
+5. Metas, orçamento, privacidade, export e backup usáveis.
+6. Empty states e microcopy em pt-BR.
+7. README curto: como rodar, onde está o tema, onde está o parser.
+
+---
+
+## 9. Critério de sucesso (o “surpresa”)
+
+Ao abrir o app pela primeira vez, a pessoa deve sentir:
+- calma visual (minimalismo real);
+- controle (números claros, sobra óbvia);
+- prazer ao trocar de tema;
+- que o lançamento rápido é rápido de verdade;
+- que extrato e comprovante poupam trabalho;
+- que parece produto lançado, não protótipo de curso.
+
+Construa como produto público premium minimalista, não como planilha com CSS.
