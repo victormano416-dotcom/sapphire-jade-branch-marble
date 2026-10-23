@@ -132,7 +132,7 @@ var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 * the dev styles URL for route-scoped CSS collection.
 */
 async function getStartManifest(matchedRoutes) {
-	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-BCS9OBiZ.mjs");
+	const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-W8MTdalZ.mjs");
 	const startManifest = tsrStartManifest();
 	let routes = startManifest.routes;
 	routes[rootRouteId];
@@ -152,13 +152,25 @@ async function getStartManifest(matchedRoutes) {
 	};
 }
 var manifest = {
+	"0aea3517d2716904eb2f0f9bdc2ee3bc73a1e28ac2fe787828a371657736fc6a": {
+		functionName: "listAccounts_createServerFn_handler",
+		importer: () => import("./access-CrJvZId3.mjs")
+	},
+	"14786d80690684c441a79356b4a27ed0daddc5f2efb22235239fdec936ecd750": {
+		functionName: "setAccountAccess_createServerFn_handler",
+		importer: () => import("./access-CrJvZId3.mjs")
+	},
+	"8d9cbb8ee2ca4bd3aa70714d533acd12b9b6f65d5811beb817ba181f10c3f789": {
+		functionName: "readMyAccess_createServerFn_handler",
+		importer: () => import("./access-CrJvZId3.mjs")
+	},
 	"91de929585e81b8c1a5493b9c0fcf8b8daa2fd6e63c987d8966c08665ee9260c": {
 		functionName: "mutateFinance_createServerFn_handler",
-		importer: () => import("./api-Bzqcng2w.mjs")
+		importer: () => import("./api-Cx9ama_x.mjs")
 	},
 	"d45afd2aa94b876252c6533eed6a1598b1d338ace844705008913a05cbcfe15f": {
 		functionName: "loadFinance_createServerFn_handler",
-		importer: () => import("./api-Bzqcng2w.mjs")
+		importer: () => import("./api-Cx9ama_x.mjs")
 	}
 };
 async function getServerFnById(id, access) {
@@ -1563,7 +1575,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
 	const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-		import("./router-DX-HKRbC.mjs").then((n) => n.t),
+		import("./router-BSF_aHeF.mjs").then((n) => n.t),
 		import("./start-5Z2QO8AU.mjs"),
 		import("./empty-plugin-adapters-D9UWiqvJ.mjs")
 	]);

@@ -2,8 +2,9 @@ import { useState } from "react";
 import { UserButton } from "@/lib/auth/gates";
 import { bundleToCsv, downloadText } from "@/lib/finance/csv";
 import { brl, centsFromText } from "@/lib/finance/money";
-import { PRO_THEMES, THEMES, type Goal, type ThemeId } from "@/lib/finance/types";
+import { LAUNCH_MONTHLY_CENTS, LAUNCH_YEARLY_CENTS, NEXT_MONTHLY_CENTS, THEMES, type Goal, type ThemeId } from "@/lib/finance/types";
 import { useFinance } from "./provider";
+import { AccountsPanel } from "./accounts";
 import { Button, Field, Modal, Money, fieldClass, monthTitle } from "./ui";
 
 const THEME_LABEL: Record<ThemeId, string> = {
@@ -14,13 +15,8 @@ const THEME_LABEL: Record<ThemeId, string> = {
   sand: "Sand",
 };
 
-function demoUntil(from = new Date()) {
-  const date = new Date(from.getFullYear() + 1, from.getMonth(), from.getDate());
-  return date.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
-}
-
 export function MoreView() {
-  const { bundle, ym, commit, busy, selectTheme, user } = useFinance();
+  const { bundle, ym, commit, busy, selectTheme, user, admin } = useFinance();
   const hidden = bundle.profile.privacyHidden;
   const profile = bundle.profile;
   const [name, setName] = useState(profile.displayName);
@@ -63,9 +59,7 @@ export function MoreView() {
           </label>
           <div>
             <p className="text-sm">{user.primaryEmail}</p>
-            <p className="text-xs text-muted">
-              {profile.plan === "pro" ? `Assinatura ativa até ${demoUntil()}` : "Plano Free"}
-            </p>
+            <p className="text-xs text-muted">Lançamento · {brl(LAUNCH_MONTHLY_CENTS)}/mês</p>
           </div>
         </div>
         <Field label="Nome">
@@ -106,10 +100,7 @@ export function MoreView() {
               className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-left ring-1 ${profile.theme === id ? "ring-accent" : "ring-line"}`}
             >
               <span className={`swatch swatch-${id} size-8 rounded-full ring-1 ring-line`} />
-              <span className="text-sm">
-                {THEME_LABEL[id]}
-                {PRO_THEMES.includes(id) ? " · Pro" : ""}
-              </span>
+              <span className="text-sm">{THEME_LABEL[id]}</span>
             </button>
           ))}
         </div>
@@ -144,26 +135,14 @@ export function MoreView() {
           <Button
             tone="line"
             className="h-10"
-            onClick={() => {
-              if (profile.plan !== "pro") {
-                setPlanOpen(true);
-                return;
-              }
-              downloadText(`bankai-${ym.year}-${ym.month}.csv`, bundleToCsv(bundle, ym), "text/csv");
-            }}
+            onClick={() => downloadText(`bankai-${ym.year}-${ym.month}.csv`, bundleToCsv(bundle, ym), "text/csv")}
           >
             CSV do mês
           </Button>
           <Button
             tone="line"
             className="h-10"
-            onClick={() => {
-              if (profile.plan !== "pro") {
-                setPlanOpen(true);
-                return;
-              }
-              downloadText("bankai.csv", bundleToCsv(bundle), "text/csv");
-            }}
+            onClick={() => downloadText("bankai.csv", bundleToCsv(bundle), "text/csv")}
           >
             CSV completo
           </Button>
@@ -201,44 +180,38 @@ export function MoreView() {
       </section>
 
       <section className="rounded-3xl p-5 ring-1 ring-line">
-        <p className="text-xs tracking-widest text-muted uppercase">{profile.plan === "pro" ? "Pro" : "Free"}</p>
-        <h3 className="mt-2 text-xl font-medium">{profile.plan === "pro" ? "Demonstração ativa" : "O essencial, de graça"}</h3>
+        <p className="text-xs tracking-widest text-muted uppercase">Assinatura</p>
+        <h3 className="mt-2 text-xl font-medium">Um plano. O caixa inteiro.</h3>
+        <p className="mt-3 text-3xl font-medium tabular-nums">
+          {brl(LAUNCH_MONTHLY_CENTS)}
+          <span className="text-sm font-normal text-muted">/mês</span>
+        </p>
         <p className="mt-2 text-sm text-muted">
-          {profile.plan === "pro"
-            ? `Demonstração Pro até ${demoUntil()}. Temas extras, exportação e metas sem limite. Sem cobrança.`
-            : "Free traz Obsidian, Paper, duas metas e o caixa completo. Pro libera o resto."}
+          Preço de lançamento, travado para quem entrar agora. Ou {brl(LAUNCH_YEARLY_CENTS)} no ano. Depois, conta nova paga {brl(NEXT_MONTHLY_CENTS)}.
         </p>
         <Button className="mt-4" tone="line" onClick={() => setPlanOpen(true)}>
-          Ver planos
+          Ver assinatura
         </Button>
       </section>
+
+      {admin ? <AccountsPanel /> : null}
 
       <UserButton />
 
       {goalOpen ? <GoalForm onClose={() => setGoalOpen(false)} /> : null}
       {planOpen ? (
-        <Modal title="Planos" onClose={() => setPlanOpen(false)}>
-          <div className="grid gap-3">
-            <article className="rounded-2xl p-4 ring-1 ring-line">
-              <h3 className="font-medium">Free</h3>
-              <p className="mt-2 text-sm text-muted">Dois temas, duas metas, backup e o caixa completo.</p>
-            </article>
-            <article className="rounded-2xl p-4 ring-1 ring-accent">
-              <h3 className="font-medium">Pro</h3>
-              <p className="mt-2 text-sm text-muted">Aurora, Forest, Sand, exportação e metas ilimitadas.</p>
-              {profile.plan === "free" ? <p className="mt-2 text-xs text-subtle">A exportação em CSV pede o Pro.</p> : null}
-            </article>
-          </div>
-          {profile.plan === "pro" ? (
-            <Button className="mt-5 w-full" disabled={busy} onClick={() => void commit({ op: "profile", profile: { plan: "free" } }).then(() => setPlanOpen(false))}>
-              Voltar ao Free
-            </Button>
-          ) : (
-            <Button className="mt-5 w-full" disabled={busy} onClick={() => void commit({ op: "profile", profile: { plan: "pro" } }).then(() => setPlanOpen(false))}>
-              Ativar Pro (demonstração)
-            </Button>
-          )}
-          <p className="mt-3 text-center text-xs text-subtle">Em breve, assinatura de verdade.</p>
+        <Modal title="Assinatura" onClose={() => setPlanOpen(false)}>
+          <p className="text-sm text-muted">Sem plano grátis. Quem assina usa temas, metas, exportação, comprovante e o caixa do mês.</p>
+          <article className="mt-4 rounded-2xl p-4 ring-1 ring-accent">
+            <p className="text-xs text-muted">Lançamento, travado</p>
+            <p className="mt-1 text-2xl font-medium tabular-nums">
+              {brl(LAUNCH_MONTHLY_CENTS)} <span className="text-sm font-normal text-muted">/mês</span>
+            </p>
+            <p className="mt-1 text-sm text-muted">ou {brl(LAUNCH_YEARLY_CENTS)} por ano</p>
+          </article>
+          <p className="mt-4 text-sm text-muted">
+            A cobrança no cartão entra com o Mercado Pago. Até lá, quem você liberar usa o caixa completo. O preço de depois fica {brl(NEXT_MONTHLY_CENTS)} por mês.
+          </p>
         </Modal>
       ) : null}
       {purgeOpen ? (

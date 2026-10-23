@@ -63,7 +63,11 @@ export function AuthScreen() {
       <h1 className="mt-4 text-4xl font-medium tracking-tight">
         {mode === "up" ? "Crie seu caixa." : "Bem-vindo de volta."}
       </h1>
-      <p className="mt-3 text-sm text-muted">Entradas, gastos e a fatura do cartão no mesmo lugar.</p>
+      <p className="mt-3 text-sm text-muted">
+        {mode === "up"
+          ? "BANKAI é pago: R$ 9,90 por mês no lançamento. O acesso abre quando a conta for liberada."
+          : "Entradas, gastos e a fatura do cartão no mesmo lugar."}
+      </p>
       <form onSubmit={submit} className="mt-8 space-y-3">
         {mode === "up" ? (
           <input

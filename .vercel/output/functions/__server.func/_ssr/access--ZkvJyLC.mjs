@@ -1,39 +1,6 @@
-import { n as createMiddleware } from "./ssr.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/validate-CU9v1j5v.js
-/**
-* Auth middleware for server functions — the standard way to get the caller's
-* verified user id. When deployed the session cookie is same-origin and rides
-* along automatically. In the live preview the client also forwards the bearer
-* token (partitioned cookies) via the `.client` hook below — call sites do not
-* thread it themselves.
-*
-*   import { createServerFn } from "@tanstack/react-start";
-*   import { getSql } from "@/lib/db";
-*   import { authMiddleware } from "@/lib/auth/middleware";
-*
-*   export const listTodos = createServerFn({ method: "GET" })
-*     .middleware([authMiddleware])
-*     .handler(async ({ context }) => {
-*       const sql = await getSql();
-*       return sql`select * from todos where user_id = ${context.userId}`;
-*     });
-*
-* Signed out with auth on (live preview included) -> throws `UnauthorizedError`
-* (see `verify.server.ts`). With auth disabled (`VITE_AUTH_ENABLED=false`, the
-* shipped default) it resolves the shared dev user — but throws instead when a
-* `DATABASE_URL` is also set, so an app without sign-in must not use this at
-* all. On the auth-on path, use it on every server function that touches
-* per-user data and scope every query by `context.userId`.
-*/
-var authMiddleware = createMiddleware({ type: "function" }).client(async ({ next }) => {
-	const { getBearerToken } = await import("./client-1vAx-gM_.mjs").then((n) => n.n).then((n) => n.n);
-	return next({ sendContext: { bearerToken: getBearerToken() ?? void 0 } });
-}).server(async ({ next, context }) => {
-	const { assertSameSiteRequest } = await import("./isolation.server-CGNg1r0B.mjs");
-	const { requireUserId } = await import("./verify.server-Dj1DVKEm.mjs");
-	assertSameSiteRequest();
-	return next({ context: { userId: await requireUserId(context.bearerToken) } });
-});
+import { a as getServerFnById, i as TSS_SERVER_FUNCTION, r as createServerFn } from "./ssr.mjs";
+import { i as normalizeStatus, n as authMiddleware, r as isOwnerEmail, t as OWNER_EMAIL } from "./access-policy-CIRrabJH.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/access--ZkvJyLC.js
 var THEMES = [
 	"obsidian",
 	"paper",
@@ -405,5 +372,73 @@ function sanitizeMutation(input) {
 		default: throw new Error("Pedido inválido.");
 	}
 }
+var createSsrRpc = (functionId) => {
+	const url = "/_serverFn/" + functionId;
+	const serverFnMeta = { id: functionId };
+	const fn = async (...args) => {
+		return (await getServerFnById(functionId, { origin: "server" }))(...args);
+	};
+	return Object.assign(fn, {
+		url,
+		serverFnMeta,
+		[TSS_SERVER_FUNCTION]: true
+	});
+};
+async function pendingCount(sql) {
+	const rows = await sql`
+    select count(*) as n
+    from "user" u
+    left join account_access a on a.user_id = u.id
+    where lower(u.email) <> ${OWNER_EMAIL}
+      and coalesce(a.status, 'pending') = 'pending'
+  `;
+	const n = Number(rows[0]?.n ?? 0);
+	return Number.isFinite(n) ? n : 0;
+}
+async function ensureAccess(sql, userId) {
+	const rows = await sql`select email from "user" where id = ${userId}`;
+	if (isOwnerEmail(rows[0]?.email)) {
+		await sql`
+      insert into account_access (user_id, status)
+      values (${userId}, 'approved')
+      on conflict (user_id) do update set status = 'approved', updated_at = now()
+    `;
+		return {
+			status: "approved",
+			admin: true,
+			pendingCount: await pendingCount(sql)
+		};
+	}
+	await sql`
+    insert into account_access (user_id, status)
+    values (${userId}, 'pending')
+    on conflict (user_id) do nothing
+  `;
+	const current = await sql`select status from account_access where user_id = ${userId}`;
+	return {
+		status: normalizeStatus(current[0]?.status),
+		admin: false,
+		pendingCount: 0
+	};
+}
+async function assertApproved(sql, userId) {
+	const access = await ensureAccess(sql, userId);
+	if (access.status === "blocked") throw new Error("ACCESS_BLOCKED");
+	if (access.status !== "approved") throw new Error("ACCESS_PENDING");
+	return access;
+}
+var readMyAccess = createServerFn({ method: "GET" }).middleware([authMiddleware]).handler(createSsrRpc("8d9cbb8ee2ca4bd3aa70714d533acd12b9b6f65d5811beb817ba181f10c3f789"));
+var listAccounts = createServerFn({ method: "GET" }).middleware([authMiddleware]).handler(createSsrRpc("0aea3517d2716904eb2f0f9bdc2ee3bc73a1e28ac2fe787828a371657736fc6a"));
+var setAccountAccess = createServerFn({ method: "POST" }).middleware([authMiddleware]).validator((input) => {
+	if (!input || typeof input !== "object") throw new Error("Pedido inválido.");
+	const userId = input.userId;
+	const status = input.status;
+	if (typeof userId !== "string" || !userId.trim()) throw new Error("Pedido inválido.");
+	if (status !== "approved" && status !== "blocked") throw new Error("Pedido inválido.");
+	return {
+		userId,
+		status
+	};
+}).handler(createSsrRpc("14786d80690684c441a79356b4a27ed0daddc5f2efb22235239fdec936ecd750"));
 //#endregion
-export { PRO_THEMES as a, authMiddleware as c, METHODS as i, sanitizeMutation as l, CATEGORIES as n, THEMES as o, INCOME_KINDS as r, applyProfilePatch as s, CARD_TONES as t };
+export { PRO_THEMES as a, assertApproved as c, readMyAccess as d, sanitizeMutation as f, METHODS as i, createSsrRpc as l, CATEGORIES as n, THEMES as o, setAccountAccess as p, INCOME_KINDS as r, applyProfilePatch as s, CARD_TONES as t, listAccounts as u };

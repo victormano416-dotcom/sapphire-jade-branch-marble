@@ -1,7 +1,11 @@
 export const THEMES = ["obsidian", "paper", "aurora", "forest", "sand"] as const;
 export type ThemeId = (typeof THEMES)[number];
 
-export const PRO_THEMES: ThemeId[] = ["aurora", "forest", "sand"];
+/** Preço de lançamento, travado para quem assinar agora. */
+export const LAUNCH_MONTHLY_CENTS = 990;
+export const LAUNCH_YEARLY_CENTS = 9900;
+/** Preço de quem entrar depois que o app estiver mais completo. */
+export const NEXT_MONTHLY_CENTS = 1490;
 
 export const CATEGORIES = [
   "Moradia",

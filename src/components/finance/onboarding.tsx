@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PRO_THEMES, THEMES, type ThemeId } from "@/lib/finance/types";
+import { THEMES, type ThemeId } from "@/lib/finance/types";
 import { Button } from "./ui";
 
 const COPY: Record<ThemeId, { label: string; hint: string }> = {
@@ -49,6 +49,7 @@ export function Onboarding({
               <li>Cartão com limite de verdade: o que ainda está em aberto.</li>
               <li>Comprovante e extrato viram lançamento, sem redigitar.</li>
             </ul>
+            <p className="mt-8 text-sm text-muted">R$ 9,90 por mês no lançamento. Sem plano grátis.</p>
           </div>
         ) : null}
         {current === "theme" ? (
@@ -68,10 +69,7 @@ export function Onboarding({
                     <span className={`swatch swatch-${id} size-11 shrink-0 rounded-full ring-1 ring-line`} />
                     <span>
                       <span className="block text-sm">{meta.label}</span>
-                      <span className="block text-xs text-muted">
-                        {meta.hint}
-                        {PRO_THEMES.includes(id) ? " · Pro" : ""}
-                      </span>
+                      <span className="block text-xs text-muted">{meta.hint}</span>
                     </span>
                   </button>
                 );

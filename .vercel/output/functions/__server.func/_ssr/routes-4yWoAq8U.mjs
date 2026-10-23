@@ -1,14 +1,15 @@
 import { o as __toESM } from "../_runtime.mjs";
 import { J as require_react, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
-import { a as getServerFnById, i as TSS_SERVER_FUNCTION, r as createServerFn } from "./ssr.mjs";
-import { a as PRO_THEMES, c as authMiddleware, i as METHODS, l as sanitizeMutation, n as CATEGORIES, o as THEMES, r as INCOME_KINDS, t as CARD_TONES } from "./validate-CU9v1j5v.mjs";
+import { r as createServerFn } from "./ssr.mjs";
+import { n as authMiddleware } from "./access-policy-CIRrabJH.mjs";
 import { a as dateLabel, c as invoiceTotal, d as monthLabel, f as occursInMonth, g as todayYm, h as sumIncome, m as sumExpenses, n as categorySpend, o as daysUntilDue, p as openBalance, r as chargeInMonth, t as addMonths } from "./period-BiCz9Slh.mjs";
+import { a as PRO_THEMES, d as readMyAccess, f as sanitizeMutation, i as METHODS, l as createSsrRpc, n as CATEGORIES, o as THEMES, p as setAccountAccess, r as INCOME_KINDS, t as CARD_TONES, u as listAccounts } from "./access--ZkvJyLC.mjs";
 import { i as signOut } from "./client-1vAx-gM_.mjs";
-import { a as hasGateSessionMarker } from "./server-DQKpQRC6.mjs";
+import { a as hasGateSessionMarker } from "./server-Df_X_lg-.mjs";
 import { a as House, c as CreditCard, d as ChartColumn, f as ArrowUpRight, i as Plus, l as ChevronRight, n as UserRound, o as Eye, p as ArrowDownLeft, s as EyeOff, u as ChevronLeft } from "../_libs/lucide-react.mjs";
-import { _ as useCurrentUser, a as Empty, c as Money, d as brl, f as brlPlain, g as parseBrlNumber, h as monthTitle, i as Confetti, l as Notice, m as fieldClass, n as Boot, o as Field, p as centsFromText, r as Button, s as Modal, t as AuthScreen, u as PlasticCard, v as useCurrentUserState } from "./use-current-user-DErols8s.mjs";
+import { _ as useCurrentUser, a as Empty, c as Money, d as brl, f as brlPlain, g as parseBrlNumber, h as monthTitle, i as Confetti, l as Notice, m as fieldClass, n as Boot, o as Field, p as centsFromText, r as Button, s as Modal, t as AuthScreen, u as PlasticCard, v as useCurrentUserState } from "./use-current-user-HT_hS61i.mjs";
 import { a as Tooltip, i as ResponsiveContainer, n as XAxis, r as Area, t as AreaChart } from "../_libs/recharts+[...].mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DuNxyXf9.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-4yWoAq8U.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var COPY = {
@@ -115,20 +116,74 @@ function Onboarding({ mode, theme, onTheme, defaultName, onFinish }) {
 		})]
 	});
 }
-var createSsrRpc = (functionId) => {
-	const url = "/_serverFn/" + functionId;
-	const serverFnMeta = { id: functionId };
-	const fn = async (...args) => {
-		return (await getServerFnById(functionId, { origin: "server" }))(...args);
-	};
-	return Object.assign(fn, {
-		url,
-		serverFnMeta,
-		[TSS_SERVER_FUNCTION]: true
-	});
-};
 var loadFinance = createServerFn({ method: "GET" }).middleware([authMiddleware]).handler(createSsrRpc("d45afd2aa94b876252c6533eed6a1598b1d338ace844705008913a05cbcfe15f"));
 var mutateFinance = createServerFn({ method: "POST" }).middleware([authMiddleware]).validator((input) => sanitizeMutation(input)).handler(createSsrRpc("91de929585e81b8c1a5493b9c0fcf8b8daa2fd6e63c987d8966c08665ee9260c"));
+var subscribeToNothing = () => () => {};
+var noGateSessionOnServer = () => false;
+/**
+* Minimal signed-in identity chip + sign-out. Restyle freely (see the
+* `design-ui` skill). Sign-out is only shown when auth is enabled (the
+* disabled-auth dev user has nothing to sign out of) and the session is not
+* gate-materialized — behind the gate the next request signs the viewer
+* straight back in, so a sign-out control there is a broken loop.
+*/
+function UserButton() {
+	const user = useCurrentUser();
+	const [signingOut, setSigningOut] = (0, import_react.useState)(false);
+	const gateSession = (0, import_react.useSyncExternalStore)(subscribeToNothing, hasGateSessionMarker, noGateSessionOnServer);
+	if (!user) return null;
+	const label = user.displayName ?? user.primaryEmail ?? "Account";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex items-center justify-between gap-3 pt-2",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "min-w-0",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "truncate text-sm",
+				children: label
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "truncate text-xs text-muted",
+				children: user.primaryEmail
+			})]
+		}), !gateSession && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+			type: "button",
+			disabled: signingOut,
+			onClick: () => {
+				setSigningOut(true);
+				signOut().catch(() => setSigningOut(false));
+			},
+			className: "h-11 shrink-0 rounded-full px-4 text-sm text-fg ring-1 ring-line transition active:scale-[0.98] disabled:opacity-50",
+			children: signingOut ? "Saindo…" : "Sair"
+		})]
+	});
+}
+function AccessHold({ status }) {
+	const blocked = status === "blocked";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
+		className: "mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center px-6 py-16",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "wordmark text-xs text-muted",
+				children: "Bankai"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "mt-4 text-4xl font-medium tracking-tight",
+				children: blocked ? "Acesso encerrado." : "Conta em análise."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-3 text-sm leading-relaxed text-muted",
+				children: blocked ? "Esta conta não entra no caixa. Se foi um engano, peça para liberarem de novo." : "Seu cadastro chegou. O caixa abre neste e-mail assim que for liberado."
+			}),
+			blocked ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "mt-3 text-xs text-subtle",
+				children: "Esta tela atualiza sozinha."
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "mt-10",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserButton, {})
+			})
+		]
+	});
+}
 var FinanceContext = (0, import_react.createContext)(null);
 function useFinance() {
 	const ctx = (0, import_react.useContext)(FinanceContext);
@@ -157,7 +212,14 @@ function errorText(error) {
 	}
 	return "Não foi possível salvar.";
 }
+function held(error) {
+	const text = errorText(error);
+	if (text.includes("ACCESS_BLOCKED")) return "blocked";
+	if (text.includes("ACCESS_PENDING")) return "pending";
+	return null;
+}
 function FinanceProvider({ user, children }) {
+	const [gate, setGate] = (0, import_react.useState)(null);
 	const [bundle, setBundle] = (0, import_react.useState)(null);
 	const [failed, setFailed] = (0, import_react.useState)("");
 	const [ym, setYm] = (0, import_react.useState)(() => todayYm(1));
@@ -173,11 +235,8 @@ function FinanceProvider({ user, children }) {
 	}, []);
 	(0, import_react.useEffect)(() => {
 		let cancel = false;
-		loadFinance().then((next) => {
-			if (cancel) return;
-			setBundle(next);
-			setYm(todayYm(next.profile.monthStartDay));
-			paintTheme(!next.profile.onboarded ? storedTheme() ?? next.profile.theme : next.profile.theme);
+		readMyAccess().then((next) => {
+			if (!cancel) setGate(next);
 		}).catch((error) => {
 			if (!cancel) setFailed(errorText(error));
 		});
@@ -185,6 +244,46 @@ function FinanceProvider({ user, children }) {
 			cancel = true;
 		};
 	}, [user.id]);
+	(0, import_react.useEffect)(() => {
+		if (!gate || gate.status === "approved") return;
+		const timer = window.setInterval(() => {
+			readMyAccess().then((next) => setGate(next)).catch(() => void 0);
+		}, 8e3);
+		return () => window.clearInterval(timer);
+	}, [user.id, gate?.status]);
+	(0, import_react.useEffect)(() => {
+		if (gate?.status !== "approved") return;
+		let cancel = false;
+		loadFinance().then((next) => {
+			if (cancel) return;
+			setFailed("");
+			setBundle(next);
+			setYm(todayYm(next.profile.monthStartDay));
+			paintTheme(!next.profile.onboarded ? storedTheme() ?? next.profile.theme : next.profile.theme);
+		}).catch((error) => {
+			if (cancel) return;
+			const status = held(error);
+			if (status) setGate({
+				status,
+				admin: false,
+				pendingCount: 0
+			});
+			else setFailed(errorText(error));
+		});
+		return () => {
+			cancel = true;
+		};
+	}, [user.id, gate?.status]);
+	(0, import_react.useEffect)(() => {
+		if (gate?.status !== "approved") return;
+		const timer = window.setInterval(() => {
+			readMyAccess().then((next) => {
+				if (next.status !== "approved") setBundle(null);
+				setGate((prev) => prev && prev.status === next.status && prev.admin === next.admin && prev.pendingCount === next.pendingCount ? prev : next);
+			}).catch(() => void 0);
+		}, 15e3);
+		return () => window.clearInterval(timer);
+	}, [user.id, gate?.status]);
 	(0, import_react.useEffect)(() => {
 		if (!bundle) return;
 		const params = new URLSearchParams(window.location.search);
@@ -232,7 +331,15 @@ function FinanceProvider({ user, children }) {
 			if (next.goals.some((goal) => goal.done && !before.includes(goal.id)) && next.profile.celebrate) setConfetti(true);
 			return next;
 		} catch (error) {
-			setNotice(errorText(error));
+			const status = held(error);
+			if (status) {
+				setBundle(null);
+				setGate({
+					status,
+					admin: false,
+					pendingCount: 0
+				});
+			} else setNotice(errorText(error));
 			return null;
 		} finally {
 			setBusy(false);
@@ -257,6 +364,8 @@ function FinanceProvider({ user, children }) {
 			})
 		]
 	});
+	if (!gate || gate.status === "approved" && !bundle && !failed) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Boot, {});
+	if (gate.status !== "approved") return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AccessHold, { status: gate.status });
 	if (!bundle) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Boot, {});
 	const theme = storedTheme() ?? bundle.profile.theme;
 	const value = {
@@ -288,7 +397,9 @@ function FinanceProvider({ user, children }) {
 				}
 			});
 			if (PRO_THEMES.includes(next) && bundle.profile.plan === "free") setNotice("Tema Pro liberado nesta demonstração.");
-		}
+		},
+		admin: gate.admin,
+		pendingCount: gate.pendingCount
 	};
 	if (!bundle.profile.onboarded) {
 		const short = localStorage.getItem("bankai-intro") === "1";
@@ -702,6 +813,9 @@ function HomeView() {
 			insights.length ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "text-sm text-muted",
 				children: insights.join(" ")
+			}) : income > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-muted",
+				children: "Nada saiu neste mês. A sobra é o que entrou."
 			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "text-sm text-muted",
 				children: "Lance a primeira entrada para ver a sobra com clareza."
@@ -1210,44 +1324,6 @@ function MonitorView() {
 		]
 	});
 }
-var subscribeToNothing = () => () => {};
-var noGateSessionOnServer = () => false;
-/**
-* Minimal signed-in identity chip + sign-out. Restyle freely (see the
-* `design-ui` skill). Sign-out is only shown when auth is enabled (the
-* disabled-auth dev user has nothing to sign out of) and the session is not
-* gate-materialized — behind the gate the next request signs the viewer
-* straight back in, so a sign-out control there is a broken loop.
-*/
-function UserButton() {
-	const user = useCurrentUser();
-	const [signingOut, setSigningOut] = (0, import_react.useState)(false);
-	const gateSession = (0, import_react.useSyncExternalStore)(subscribeToNothing, hasGateSessionMarker, noGateSessionOnServer);
-	if (!user) return null;
-	const label = user.displayName ?? user.primaryEmail ?? "Account";
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "flex items-center justify-between gap-3 pt-2",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "min-w-0",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "truncate text-sm",
-				children: label
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "truncate text-xs text-muted",
-				children: user.primaryEmail
-			})]
-		}), !gateSession && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-			type: "button",
-			disabled: signingOut,
-			onClick: () => {
-				setSigningOut(true);
-				signOut().catch(() => setSigningOut(false));
-			},
-			className: "h-11 shrink-0 rounded-full px-4 text-sm text-fg ring-1 ring-line transition active:scale-[0.98] disabled:opacity-50",
-			children: signingOut ? "Saindo…" : "Sair"
-		})]
-	});
-}
 function cell(value) {
 	const text = String(value ?? "");
 	if (/[;"\n]/.test(text)) return `"${text.replace(/"/g, "\"\"")}"`;
@@ -1320,6 +1396,131 @@ function downloadText(filename, content, type) {
 	a.click();
 	URL.revokeObjectURL(url);
 }
+var LABEL = {
+	pending: "Aguardando",
+	approved: "Liberada",
+	blocked: "Bloqueada"
+};
+function when(value) {
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return "";
+	return date.toLocaleDateString("pt-BR", {
+		day: "2-digit",
+		month: "short",
+		year: "numeric"
+	});
+}
+function message(error) {
+	if (error instanceof Error && error.message) return error.message;
+	return "Não foi possível atualizar as contas.";
+}
+function AccountsPanel() {
+	const { pendingCount } = useFinance();
+	const [rows, setRows] = (0, import_react.useState)(null);
+	const [error, setError] = (0, import_react.useState)("");
+	const [busyId, setBusyId] = (0, import_react.useState)("");
+	(0, import_react.useEffect)(() => {
+		let cancel = false;
+		listAccounts().then((next) => {
+			if (!cancel) setRows(next);
+		}).catch((err) => {
+			if (!cancel) setError(message(err));
+		});
+		return () => {
+			cancel = true;
+		};
+	}, [pendingCount]);
+	async function setStatus(userId, status) {
+		setBusyId(userId);
+		setError("");
+		try {
+			setRows(await setAccountAccess({ data: {
+				userId,
+				status
+			} }));
+		} catch (err) {
+			setError(message(err));
+		} finally {
+			setBusyId("");
+		}
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: "space-y-3",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+					className: "text-sm text-muted",
+					children: "Contas"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					className: "text-sm",
+					onClick: () => {
+						setError("");
+						listAccounts().then(setRows).catch((err) => setError(message(err)));
+					},
+					children: "Atualizar"
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-muted",
+				children: "Quem se cadastra fica aqui até você liberar. Bloquear tira o acesso e mantém os dados."
+			}),
+			error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-danger",
+				children: error
+			}) : null,
+			rows === null && !error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-muted",
+				children: "Carregando…"
+			}) : null,
+			rows?.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-muted",
+				children: "Nenhuma conta ainda."
+			}) : null,
+			rows?.map((row) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+				className: `rounded-2xl p-4 ring-1 ${row.status === "pending" ? "ring-accent" : "ring-line"}`,
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-sm",
+						children: row.name || "Sem nome"
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "truncate text-sm text-muted",
+						children: row.email
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "mt-1 text-xs text-subtle",
+						children: [
+							when(row.createdAt),
+							when(row.createdAt) ? " · " : "",
+							LABEL[row.status]
+						]
+					}),
+					row.self ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "mt-3 text-xs text-muted",
+						children: "Sua conta"
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "mt-3 flex gap-2",
+						children: [row.status !== "approved" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							disabled: busyId === row.id,
+							className: "h-10 rounded-full bg-accent px-4 text-sm text-accent-fg disabled:opacity-50",
+							onClick: () => void setStatus(row.id, "approved"),
+							children: "Liberar"
+						}) : null, row.status !== "blocked" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							disabled: busyId === row.id,
+							className: "h-10 rounded-full px-4 text-sm ring-1 ring-line disabled:opacity-50",
+							onClick: () => void setStatus(row.id, "blocked"),
+							children: "Bloquear"
+						}) : null]
+					})
+				]
+			}, row.id))
+		]
+	});
+}
 var THEME_LABEL = {
 	obsidian: "Obsidian",
 	paper: "Paper",
@@ -1335,7 +1536,7 @@ function demoUntil(from = /* @__PURE__ */ new Date()) {
 	});
 }
 function MoreView() {
-	const { bundle, ym, commit, busy, selectTheme, user } = useFinance();
+	const { bundle, ym, commit, busy, selectTheme, user, admin } = useFinance();
 	const hidden = bundle.profile.privacyHidden;
 	const profile = bundle.profile;
 	const [name, setName] = (0, import_react.useState)(profile.displayName);
@@ -1607,6 +1808,7 @@ function MoreView() {
 					})
 				]
 			}),
+			admin ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AccountsPanel, {}) : null,
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UserButton, {}),
 			goalOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GoalForm, { onClose: () => setGoalOpen(false) }) : null,
 			planOpen ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Modal, {
@@ -1837,8 +2039,7 @@ function GoalForm({ onClose }) {
 								targetCents: centsFromText(digits),
 								savedCents: 0,
 								year,
-								month: mon,
-								day: null
+								month: mon
 							}
 						}).then((saved) => {
 							if (saved) onClose();
@@ -2859,23 +3060,29 @@ function AppShell() {
 			}, tab),
 			quick ? null : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Fab, { onOpen: () => finance.openQuick() }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("nav", {
-				className: `glass fixed bottom-4 left-1/2 z-30 grid w-[min(100%-1.5rem,40rem)] -translate-x-1/2 grid-cols-6 overflow-hidden rounded-full px-1 py-1 ${quick ? "pointer-events-none opacity-0" : ""}`,
+				className: `glass fixed bottom-4 left-1/2 z-30 flex w-[min(100%-1.5rem,28rem)] -translate-x-1/2 items-center justify-between rounded-full px-1.5 py-1 ${quick ? "pointer-events-none opacity-0" : ""}`,
 				"aria-label": "Seções",
 				children: TABS.map((item) => {
 					const Icon = item.icon;
 					const active = tab === item.id;
+					const waiting = item.id === "more" && finance.pendingCount > 0;
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						onClick: () => setTab(item.id),
 						"aria-current": active ? "page" : void 0,
-						className: `flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-0.5 ${active ? "bg-surface-2 text-fg" : "text-subtle"}`,
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-							strokeWidth: 1.5,
-							className: "size-5"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "max-w-full truncate text-xs leading-none",
-							children: item.label
-						})]
+						"aria-label": waiting ? `Mais, ${finance.pendingCount} aguardando` : item.label,
+						className: `relative flex h-12 min-w-11 items-center justify-center gap-1.5 rounded-full ${active ? "bg-surface-2 px-3 text-fg" : "px-1 text-subtle"}`,
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+								strokeWidth: 1.5,
+								className: "size-5 shrink-0"
+							}),
+							waiting ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "absolute top-2 right-1.5 size-1.5 rounded-full bg-accent" }) : null,
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: active ? "text-xs" : "sr-only",
+								children: item.label
+							})
+						]
 					}, item.id);
 				})
 			}),

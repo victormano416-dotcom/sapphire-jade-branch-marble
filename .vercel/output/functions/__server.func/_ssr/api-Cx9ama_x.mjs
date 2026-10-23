@@ -1,16 +1,10 @@
-import { i as TSS_SERVER_FUNCTION, r as createServerFn } from "./ssr.mjs";
-import { r as getSql } from "./db-Bi916Mx5.mjs";
-import { c as authMiddleware, l as sanitizeMutation, s as applyProfilePatch } from "./validate-CU9v1j5v.mjs";
+import { r as createServerFn } from "./ssr.mjs";
+import { r as getSql } from "./db-6Z3KeLXa.mjs";
+import { t as createServerRpc } from "./createServerRpc-CcvdN_gc.mjs";
+import { n as authMiddleware } from "./access-policy-CIRrabJH.mjs";
 import { g as todayYm, i as cmpYm, l as isSettled, u as itemPeriod } from "./period-BiCz9Slh.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/api-Bzqcng2w.js
-var createServerRpc = (serverFnMeta, splitImportFn) => {
-	const url = "/_serverFn/" + serverFnMeta.id;
-	return Object.assign(splitImportFn, {
-		url,
-		serverFnMeta,
-		[TSS_SERVER_FUNCTION]: true
-	});
-};
+import { c as assertApproved, f as sanitizeMutation, s as applyProfilePatch } from "./access--ZkvJyLC.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/api-Cx9ama_x.js
 function num(value) {
 	const n = typeof value === "number" ? value : Number(value);
 	return Number.isFinite(n) ? n : 0;
@@ -406,7 +400,9 @@ var loadFinance_createServerFn_handler = createServerRpc({
 	filename: "src/lib/finance/api.ts"
 }, (opts) => loadFinance.__executeServer(opts));
 var loadFinance = createServerFn({ method: "GET" }).middleware([authMiddleware]).handler(loadFinance_createServerFn_handler, async ({ context }) => {
-	return readBundle(await getSql(), context.userId);
+	const sql = await getSql();
+	await assertApproved(sql, context.userId);
+	return readBundle(sql, context.userId);
 });
 var mutateFinance_createServerFn_handler = createServerRpc({
 	id: "91de929585e81b8c1a5493b9c0fcf8b8daa2fd6e63c987d8966c08665ee9260c",
@@ -415,6 +411,7 @@ var mutateFinance_createServerFn_handler = createServerRpc({
 }, (opts) => mutateFinance.__executeServer(opts));
 var mutateFinance = createServerFn({ method: "POST" }).middleware([authMiddleware]).validator((input) => sanitizeMutation(input)).handler(mutateFinance_createServerFn_handler, async ({ context, data }) => {
 	const sql = await getSql();
+	await assertApproved(sql, context.userId);
 	await applyMutation(sql, context.userId, data);
 	return readBundle(sql, context.userId);
 });

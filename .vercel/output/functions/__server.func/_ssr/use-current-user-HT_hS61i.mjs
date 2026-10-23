@@ -2,11 +2,11 @@ import { o as __toESM } from "../_runtime.mjs";
 import { J as require_react, x as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { s as fullMonthLabel } from "./period-BiCz9Slh.mjs";
 import { r as signIn, t as authClient } from "./client-1vAx-gM_.mjs";
-import { t as GROK_PROVIDERS } from "./server-DQKpQRC6.mjs";
+import { t as GROK_PROVIDERS } from "./server-Df_X_lg-.mjs";
 import { t as X } from "../_libs/lucide-react.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/use-current-user-DErols8s.js
+//#region node_modules/.nitro/vite/services/ssr/assets/use-current-user-HT_hS61i.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function mapAuthError(message) {
@@ -77,7 +77,7 @@ function AuthScreen() {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "mt-3 text-sm text-muted",
-				children: "Entradas, gastos e a fatura do cartão no mesmo lugar."
+				children: mode === "up" ? "Depois do cadastro, o acesso fica pendente até ser liberado." : "Entradas, gastos e a fatura do cartão no mesmo lugar."
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
 				onSubmit: submit,

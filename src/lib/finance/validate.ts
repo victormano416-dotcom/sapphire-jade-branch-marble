@@ -2,7 +2,6 @@ import {
   CARD_TONES,
   CATEGORIES,
   INCOME_KINDS,
-  PRO_THEMES,
   THEMES,
   type Bundle,
   type CardInput,
@@ -196,9 +195,6 @@ export function applyProfilePatch(current: Profile, patch: Partial<Profile>): Pr
   if (!(THEMES as readonly string[]).includes(next.theme)) next.theme = "obsidian";
   const plan: PlanId = next.plan === "pro" ? "pro" : "free";
   next.plan = plan;
-  if (plan === "free" && (PRO_THEMES as readonly string[]).includes(next.theme)) {
-    next.theme = "obsidian";
-  }
   next.monthStartDay = int(next.monthStartDay, 1, 28, 1);
   return next;
 }

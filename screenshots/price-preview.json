@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "BANKAI",
+      "hasCanvas": false,
+      "bodyTextLen": 85,
+      "bodyTextHash": "a1b1d1d04a6a105ca169266dbe86b0982cbcd19e4c52dfbde6a60628c8e1440a",
+      "bodyTextPrefix": "BANKAI Seu caixa, sem planilha. Entradas, gastos e a fatura do c",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/price-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "BANKAI",
+      "hasCanvas": false,
+      "bodyTextLen": 247,
+      "bodyTextHash": "333ffe4145d79c478235169aea27a5fb57408fc557c146c6a94c5ad831056b80",
+      "bodyTextPrefix": "BANKAI Seu caixa, sem planilha. Entradas e gastos do mês, fixos ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/price-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/price-preview.json"
+}

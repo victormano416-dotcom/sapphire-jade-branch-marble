@@ -81,15 +81,18 @@ export function AppShell() {
         {TABS.map((item) => {
           const Icon = item.icon;
           const active = tab === item.id;
+          const waiting = item.id === "more" && finance.pendingCount > 0;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
               aria-current={active ? "page" : undefined}
-              className={`flex h-12 min-w-11 items-center justify-center gap-1.5 rounded-full ${active ? "bg-surface-2 px-3 text-fg" : "px-1 text-subtle"}`}
+              aria-label={waiting ? `Mais, ${finance.pendingCount} aguardando` : item.label}
+              className={`relative flex h-12 min-w-11 items-center justify-center gap-1.5 rounded-full ${active ? "bg-surface-2 px-3 text-fg" : "px-1 text-subtle"}`}
             >
               <Icon strokeWidth={1.5} className="size-5 shrink-0" />
+              {waiting ? <span className="absolute top-2 right-1.5 size-1.5 rounded-full bg-accent" /> : null}
               <span className={active ? "text-xs" : "sr-only"}>{item.label}</span>
             </button>
           );

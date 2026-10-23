@@ -1,1 +1,0 @@
-import{j as e,n as t,r as n}from"./use-current-user-CqhUeiVj.js";import{i as r,r as i}from"./index-DqsRPfqF.js";var a=r();function o(){let{user:r,isPending:o}=t();return o?(0,a.jsx)(n,{}):r?(0,a.jsx)(i,{to:`/`}):(0,a.jsx)(e,{})}export{o as component};

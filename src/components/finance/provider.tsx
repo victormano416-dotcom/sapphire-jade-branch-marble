@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { AppUser } from "@/lib/auth/use-current-user";
+import { readMyAccess, type AccessState } from "@/lib/finance/access";
 import { loadFinance, mutateFinance } from "@/lib/finance/api";
 import { todayYm, type Ym } from "@/lib/finance/period";
-import { PRO_THEMES, THEMES, type Bundle, type PayMethod, type ThemeId } from "@/lib/finance/types";
+import { THEMES, type Bundle, type PayMethod, type ThemeId } from "@/lib/finance/types";
 import type { Mutation } from "@/lib/finance/validate";
 import { Onboarding } from "./onboarding";
+import { AccessHold } from "./access-hold";
 import { Boot, Confetti, Notice } from "./ui";
 
 export type Tab = "home" | "in" | "out" | "cards" | "monitor" | "more";
@@ -30,6 +32,8 @@ type Ctx = {
   commit: (mutation: Mutation) => Promise<Bundle | null>;
   togglePrivacy: () => void;
   selectTheme: (theme: ThemeId) => void;
+  admin: boolean;
+  pendingCount: number;
 };
 
 const FinanceContext = createContext<Ctx | null>(null);
@@ -67,7 +71,15 @@ function errorText(error: unknown) {
   return "Não foi possível salvar.";
 }
 
+function held(error: unknown): AccessState["status"] | null {
+  const text = errorText(error);
+  if (text.includes("ACCESS_BLOCKED")) return "blocked";
+  if (text.includes("ACCESS_PENDING")) return "pending";
+  return null;
+}
+
 export function FinanceProvider({ user, children }: { user: AppUser; children: ReactNode }) {
+  const [gate, setGate] = useState<AccessState | null>(null);
   const [bundle, setBundle] = useState<Bundle | null>(null);
   const [failed, setFailed] = useState("");
   const [ym, setYm] = useState<Ym>(() => todayYm(1));
@@ -85,13 +97,9 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
 
   useEffect(() => {
     let cancel = false;
-    loadFinance()
+    readMyAccess()
       .then((next) => {
-        if (cancel) return;
-        setBundle(next);
-        setYm(todayYm(next.profile.monthStartDay));
-        const theme = !next.profile.onboarded ? (storedTheme() ?? next.profile.theme) : next.profile.theme;
-        paintTheme(theme);
+        if (!cancel) setGate(next);
       })
       .catch((error: unknown) => {
         if (!cancel) setFailed(errorText(error));
@@ -100,6 +108,59 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
       cancel = true;
     };
   }, [user.id]);
+
+  useEffect(() => {
+    if (!gate || gate.status === "approved") return;
+    const timer = window.setInterval(() => {
+      readMyAccess()
+        .then((next) => setGate(next))
+        .catch(() => undefined);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [user.id, gate?.status]);
+
+  useEffect(() => {
+    if (gate?.status !== "approved") return;
+    let cancel = false;
+    loadFinance()
+      .then((next) => {
+        if (cancel) return;
+        setFailed("");
+        setBundle(next);
+        setYm(todayYm(next.profile.monthStartDay));
+        const theme = !next.profile.onboarded ? (storedTheme() ?? next.profile.theme) : next.profile.theme;
+        paintTheme(theme);
+      })
+      .catch((error: unknown) => {
+        if (cancel) return;
+        const status = held(error);
+        if (status) setGate({ status, admin: false, pendingCount: 0 });
+        else setFailed(errorText(error));
+      });
+    return () => {
+      cancel = true;
+    };
+  }, [user.id, gate?.status]);
+
+  useEffect(() => {
+    if (gate?.status !== "approved") return;
+    const timer = window.setInterval(() => {
+      readMyAccess()
+        .then((next) => {
+          if (next.status !== "approved") setBundle(null);
+          setGate((prev) =>
+            prev &&
+            prev.status === next.status &&
+            prev.admin === next.admin &&
+            prev.pendingCount === next.pendingCount
+              ? prev
+              : next,
+          );
+        })
+        .catch(() => undefined);
+    }, 15000);
+    return () => window.clearInterval(timer);
+  }, [user.id, gate?.status]);
 
   useEffect(() => {
     if (!bundle) return;
@@ -142,7 +203,11 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
       if (finished && next.profile.celebrate) setConfetti(true);
       return next;
     } catch (error) {
-      setNotice(errorText(error));
+      const status = held(error);
+      if (status) {
+        setBundle(null);
+        setGate({ status, admin: false, pendingCount: 0 });
+      } else setNotice(errorText(error));
       return null;
     } finally {
       setBusy(false);
@@ -161,6 +226,8 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
     );
   }
 
+  if (!gate || (gate.status === "approved" && !bundle && !failed)) return <Boot />;
+  if (gate.status !== "approved") return <AccessHold status={gate.status} />;
   if (!bundle) return <Boot />;
 
   const theme = storedTheme() ?? bundle.profile.theme;
@@ -182,12 +249,10 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
     },
     selectTheme: (next) => {
       paintTheme(next);
-      const plan = PRO_THEMES.includes(next) ? "pro" : bundle.profile.plan;
-      void commit({ op: "profile", profile: { theme: next, plan } });
-      if (PRO_THEMES.includes(next) && bundle.profile.plan === "free") {
-        setNotice("Tema Pro liberado nesta demonstração.");
-      }
+      void commit({ op: "profile", profile: { theme: next } });
     },
+    admin: gate.admin,
+    pendingCount: gate.pendingCount,
   };
 
   if (!bundle.profile.onboarded) {
@@ -200,19 +265,16 @@ export function FinanceProvider({ user, children }: { user: AppUser; children: R
           defaultName={bundle.profile.displayName || user.displayName || ""}
           onTheme={(next) => {
             paintTheme(next);
-            const plan = PRO_THEMES.includes(next) ? "pro" : bundle.profile.plan;
-            void commit({ op: "profile", profile: { theme: next, plan } });
+            void commit({ op: "profile", profile: { theme: next } });
           }}
           onFinish={(name) => {
             localStorage.setItem("bankai-intro", "1");
             const chosen = storedTheme() ?? theme;
-            const plan = PRO_THEMES.includes(chosen) ? "pro" : "free";
             void commit({
               op: "profile",
               profile: {
                 displayName: name || user.displayName || "Você",
                 theme: chosen,
-                plan,
                 onboarded: true,
               },
             }).then(() => {

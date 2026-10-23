@@ -19,6 +19,7 @@ import type {
   Purchase,
 } from "./types";
 import { applyProfilePatch, sanitizeMutation, type Mutation } from "./validate";
+import { assertApproved } from "./access";
 
 type Row = Record<string, unknown>;
 
@@ -199,11 +200,6 @@ async function writeProfile(sql: Sql, userId: string, profile: Profile) {
   `;
 }
 
-async function goalCount(sql: Sql, userId: string): Promise<number> {
-  const rows = await sql<{ n: number }>`select count(*)::int as n from goals where user_id = ${userId}`;
-  return num(rows[0]?.n);
-}
-
 async function insertIncome(sql: Sql, userId: string, id: string, data: Income) {
   await sql`
     insert into incomes (id, user_id, kind, description, amount_cents, recurring, year, month, day)
@@ -335,10 +331,6 @@ async function applyMutation(sql: Sql, userId: string, mutation: Mutation) {
     const data = mutation.data;
     const done = data.savedCents >= data.targetCents;
     if (!mutation.id) {
-      const profile = (await readBundle(sql, userId)).profile;
-      if (profile.plan !== "pro" && (await goalCount(sql, userId)) >= 2) {
-        throw new Error("No plano Free cabem duas metas. Ative o Pro para criar mais.");
-      }
       const id = crypto.randomUUID();
       await sql`
         insert into goals (id, user_id, name, target_cents, saved_cents, year, month, done)
@@ -478,6 +470,7 @@ export const loadFinance = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }): Promise<Bundle> => {
     const sql = await getSql();
+    await assertApproved(sql, context.userId);
     return readBundle(sql, context.userId);
   });
 
@@ -486,6 +479,7 @@ export const mutateFinance = createServerFn({ method: "POST" })
   .validator((input: unknown) => sanitizeMutation(input))
   .handler(async ({ context, data }): Promise<Bundle> => {
     const sql = await getSql();
+    await assertApproved(sql, context.userId);
     await applyMutation(sql, context.userId, data);
     return readBundle(sql, context.userId);
   });
